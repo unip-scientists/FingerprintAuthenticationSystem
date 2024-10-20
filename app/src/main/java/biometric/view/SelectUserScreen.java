@@ -66,7 +66,7 @@ public class SelectUserScreen extends JPanel {
             continueButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    controller.goToNextPanel(SelectUserScreen.this);
+                    controller.goToNextPanel(SelectUserScreen.this, (Funcionario) dropdownList.getSelectedItem());
                 }
             });
 

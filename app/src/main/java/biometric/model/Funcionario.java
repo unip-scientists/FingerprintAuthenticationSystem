@@ -5,12 +5,12 @@ import java.net.MalformedURLException;
 import java.net.URI;
 
 public class Funcionario {
-    int id;
-    String phone;
-    String username;
-    String name;
-    URL avatar;
-    String cargoName;
+    private int id;
+    private String phone;
+    private String username;
+    private String name;
+    private URL avatar;
+    private String cargoName;
 
     public Funcionario(int id, String phone, String username, String name, String avatar, String cargoName) {
         this.id = id;
@@ -33,5 +33,18 @@ public class Funcionario {
 
     public URL getAvatarURL() {
         return avatar;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+    public int getId() {
+        return id;
+    }
+
+    public String getInfo() {
+        return "<html>" + name + "<br/>"
+            + "TELEFONE: " + phone + "<br/>"
+            + "CARGO: " + cargoName + "</html>";
     }
 }

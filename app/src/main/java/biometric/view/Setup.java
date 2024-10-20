@@ -19,11 +19,16 @@ public class Setup {
         return fingerprintsPath;
     }
 
-    Connection start(String url, String name, String password) throws IOException, SQLException {
-        conn = DriverManager.getConnection(url, name, password);
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection("jdbc:mysql://localhost:40000/app", "app", "test1234");
+    }
+
+    Connection start() throws IOException, SQLException {
+        this.conn = getConnection();
         String basePath = new File("").getAbsolutePath();
         tablesPath = Path.of(basePath, "/src/main/java/biometric/data");
         fingerprintsPath = Path.of(basePath, "/src/main/java/biometric/data/fingerprint");
+        System.out.println(fingerprintsPath);
 
         try {
             Rio();
