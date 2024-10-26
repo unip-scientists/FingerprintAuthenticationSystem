@@ -30,19 +30,23 @@ public class SelectDatabaseController {
     private TableScreen nextPanel;
     private App frame;
 
-    public SelectDatabaseController(App frame, Matcher matcher, TableScreen nextPanel) {
-        this.matcher = matcher;
-        this.frame = frame;
+    public void setNextPanel(TableScreen nextPanel) {
         this.nextPanel = nextPanel;
     }
 
-    public boolean match(int id) throws IOException {
+
+    public SelectDatabaseController(App frame, Matcher matcher) {
+        this.matcher = matcher;
+        this.frame = frame;
+    }
+
+    public boolean match() throws IOException {
         // build templates, this might be in another thread so it doesn't crash the main thread.
         matcher.buildTemplates();
         return matcher.compare(40);
     }
 
-    public String clickedDatabaseButton(JButton[] buttons, ActionEvent clickedButtonEvent) {
+    public void clickedDatabaseButton(JButton[] buttons, ActionEvent clickedButtonEvent) {
         JButton selectedButton = (JButton) clickedButtonEvent.getSource();
         currentSelectedDatabase = selectedButton.getText();
 
@@ -54,21 +58,22 @@ public class SelectDatabaseController {
                 b.setBackground(null);
             }
         }
-
-        return currentSelectedDatabase;
     }
 
-    public File getCandidate(int id) {
+    public File authorizedMatcher(int id) {
+        // candidate + default probe
         return matcher.chooseCandidate(id);
     }
 
-    public File getCandidate() throws SQLException {
+    public File forbadeMatcher(int id) throws SQLException {
+        // candidate != id + default probe
         Statement stat = Setup.getConnection().createStatement();
-
-        ResultSet res = stat.executeQuery("SELECT Id FROM Funcionario ORDER BY RAND() LIMIT 1");
+        ResultSet res = stat.executeQuery("SELECT Id FROM Funcionario WHERE Id != " + id + " ORDER BY RAND() LIMIT 1");
         res.next();
 
-        return matcher.chooseCandidate(res.getInt("Id"));
+        File candidate = matcher.chooseCandidate(res.getInt("Id"));
+        matcher.chooseProbe(id);
+        return candidate;
     }
 
     public void goToNextPanel(JPanel e, String tableName) throws SQLException {

@@ -6,19 +6,22 @@ import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
+import javax.swing.BorderFactory;
 import java.awt.Dimension;
+import java.awt.Color;
 import javax.swing.Box;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.io.File;
 import java.awt.Image;
 import java.awt.Component;
 import javax.swing.JComboBox;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 import biometric.controller.SelectDatabaseController;
 import biometric.model.Funcionario;
@@ -26,13 +29,11 @@ import biometric.model.Funcionario;
 public class SelectDatabaseScreen extends JPanel {
 
     private Funcionario funcionario;
-    private File scannedFingerprint;
     private JLabel avatarImage;
     private JLabel usernameLabel;
     private JLabel funcionarioInfo;
     private JLabel fingerprintImage;
     private JLabel statusLabel;
-    private String db;
 
     public void setFuncionario(Funcionario funcionario) {
         this.funcionario = funcionario;
@@ -42,7 +43,7 @@ public class SelectDatabaseScreen extends JPanel {
             img = ImageIO.read(funcionario.getAvatarURL());
             avatarImage.setIcon(
                     new ImageIcon(img.getScaledInstance(avatarImage.getWidth(), avatarImage.getHeight(),
-                            Image.SCALE_SMOOTH)));
+                            Image.SCALE_SMOOTH)));     
         } catch (IOException e) {
             /* NONFATAL: profile photo is not displayed */
             e.printStackTrace();
@@ -53,6 +54,7 @@ public class SelectDatabaseScreen extends JPanel {
 
     public SelectDatabaseScreen(SelectDatabaseController controller) {
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+        add(Box.createRigidArea(new Dimension(0, 10)));
 
         /* top - Funcionario information */
         JPanel topPanel = new JPanel();
@@ -62,17 +64,25 @@ public class SelectDatabaseScreen extends JPanel {
         leftInfoPanel.setLayout(new BoxLayout(leftInfoPanel, BoxLayout.PAGE_AXIS));
 
         avatarImage = new JLabel();
+        avatarImage.setBorder(BorderFactory.createLineBorder(Color.black, 2));
         avatarImage.setSize(75, 75);
+
         usernameLabel = new JLabel();
         funcionarioInfo = new JLabel();
+        Dimension d = new Dimension(150, 50);
+        funcionarioInfo.setSize(d);
+        funcionarioInfo.setMaximumSize(d);
 
         avatarImage.setAlignmentX(Component.CENTER_ALIGNMENT);
         usernameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        leftInfoPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        funcionarioInfo.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         leftInfoPanel.add(avatarImage);
         leftInfoPanel.add(usernameLabel);
 
         topPanel.add(leftInfoPanel);
+        topPanel.add(Box.createRigidArea(new Dimension(5, 0)));
         topPanel.add(funcionarioInfo);
 
         /* middle - button to select databaes */
@@ -89,8 +99,7 @@ public class SelectDatabaseScreen extends JPanel {
             b.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    String db = controller.clickedDatabaseButton(buttons, e);
-                    SelectDatabaseScreen.this.db = db;
+                    controller.clickedDatabaseButton(buttons, e);
                 }
             });
         }
@@ -106,6 +115,8 @@ public class SelectDatabaseScreen extends JPanel {
         bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.PAGE_AXIS));
 
         fingerprintImage = new JLabel();
+        fingerprintImage.setSize(100, 100);
+        fingerprintImage.setBorder(BorderFactory.createLineBorder(Color.black, 2));
 
         JComboBox<String> dropdownList = new JComboBox<>();
         dropdownList.setPreferredSize(new Dimension(175, 20));
@@ -115,8 +126,14 @@ public class SelectDatabaseScreen extends JPanel {
         dropdownList.addItem("Digital NÃO autorizada");
 
         JButton scannerButton = new JButton("obter impressão digital");
-
         statusLabel = new JLabel("Esperando scanner");
+
+        dropdownList.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                scannerButton.setText("obter impressão digital");
+            }
+        });
 
         bottomPanel.add(dropdownList);
         bottomPanel.add(Box.createRigidArea(new Dimension(0, 5)));
@@ -141,7 +158,14 @@ public class SelectDatabaseScreen extends JPanel {
                  * end
                  */
 
+                String db = controller.getCurrentSelectedDatabase();
                 String c = funcionario.getCargoName();
+
+                if (db.isEmpty()) {
+                    // ERROR NONFATAL: the user must select one of the three databases
+                    JOptionPane.showMessageDialog(SelectDatabaseScreen.this, "You have to select one of the databases.", "Options", JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }
 
                 if (db.equals("Lencol") && !c.equals("Ministro")
                     || db.equals("Mares") && c.equals("Funcionario")) {
@@ -150,14 +174,15 @@ public class SelectDatabaseScreen extends JPanel {
                     JOptionPane.showMessageDialog(SelectDatabaseScreen.this, "You do not have access to this source.", "Forbidden", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
+
                 if (scannerButton.getText().equals("Confirmar Identidade")) {
                     try {
-                        boolean isSimilar = controller.match(funcionario.getId());
-
-                        if (isSimilar) {
+                        if (controller.match()) {
                             controller.goToNextPanel(SelectDatabaseScreen.this,controller.getCurrentSelectedDatabase());
                         } else {
                             JOptionPane.showMessageDialog(SelectDatabaseScreen.this, "Your identity is not confirmed.", "Not Authorized", JOptionPane.ERROR_MESSAGE);
+                            scannerButton.setText("obter impressão digital");
+                            statusLabel.setText("Esperando scanner");
                         }
                     } catch (IOException e1) {
                         JOptionPane.showMessageDialog(SelectDatabaseScreen.this, "Fingerprint confirmation FAILED", "Fingerprint Error", JOptionPane.ERROR_MESSAGE);
@@ -171,19 +196,13 @@ public class SelectDatabaseScreen extends JPanel {
                     return;
                 }
 
-                if (controller.getCurrentSelectedDatabase().isEmpty()) {
-                    // ERROR NONFATAL: the user must select one of the three databases
-                    JOptionPane.showMessageDialog(SelectDatabaseScreen.this, "You have to select one of the databases.", "Options", JOptionPane.INFORMATION_MESSAGE);
-                    return;
-                }
-
                 if (((String) dropdownList.getSelectedItem()).equals("Digital autorizada")) {
                     try {
-                        scannedFingerprint = controller.getCandidate(funcionario.getId());
-                        BufferedImage img = ImageIO.read(scannedFingerprint);
-                        fingerprintImage.setSize(100, 100);
+                        BufferedImage img = ImageIO.read(controller.authorizedMatcher(funcionario.getId()));
+
                         fingerprintImage.setIcon(new ImageIcon(
                                 img.getScaledInstance(fingerprintImage.getWidth(), fingerprintImage.getHeight(),
+
                                         Image.SCALE_SMOOTH)));
                     } catch (IOException e1) {
                         // FATAL: there is no matching if the candidate is missing.
@@ -194,12 +213,13 @@ public class SelectDatabaseScreen extends JPanel {
 
                 } else if (((String) dropdownList.getSelectedItem()).equals("Digital NÃO autorizada")) {
                     try {
-                        scannedFingerprint = controller.getCandidate();
-                        BufferedImage img = ImageIO.read(scannedFingerprint);
+                        BufferedImage img = ImageIO.read(controller.forbadeMatcher(funcionario.getId()));
                         fingerprintImage.setSize(100, 100);
+
                         fingerprintImage.setIcon(new ImageIcon(
                                 img.getScaledInstance(fingerprintImage.getWidth(), fingerprintImage.getHeight(),
                                         Image.SCALE_SMOOTH)));
+
                     } catch (IOException | SQLException e1) {
                         // FATAL: IO - problem with reading image, can't continue the program
                         // FATAL: SQL - can't access the database can't create fingerprint template
@@ -224,6 +244,5 @@ public class SelectDatabaseScreen extends JPanel {
         add(middlePanel);
         add(Box.createRigidArea(new Dimension(0, 20)));
         add(bottomPanel);
-
     }
 }

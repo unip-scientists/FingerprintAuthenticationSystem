@@ -23,14 +23,25 @@ public class App extends JFrame {
             public void run() {
                 try (var conn = setup.start()) {
                     Matcher matcher = new Matcher(setup.getFingerprintsPath(), 500);
-                    TableScreen tableScreen = new TableScreen(new TableController());
-                    SelectDatabaseScreen selectDatabaseScreen = new SelectDatabaseScreen(
-                            new SelectDatabaseController(app, matcher, tableScreen));
-                    SelectUserScreen selectUserScreen = new SelectUserScreen(
-                            new SelectUserController(app, selectDatabaseScreen));
+
+                    TableController tableController = new TableController(app);
+                    SelectDatabaseController selectDatabaseController = new SelectDatabaseController(app, matcher);
+                    SelectUserController selectUserController = new SelectUserController(app);
+
+                    TableScreen tableScreen = new TableScreen(tableController);
+                    SelectDatabaseScreen selectDatabaseScreen = new SelectDatabaseScreen(selectDatabaseController);
+                    SelectUserScreen selectUserScreen = new SelectUserScreen(selectUserController);
+
+                    tableController.setFirstScreen(selectUserScreen);
+                    tableController.setPreviousScreen(selectDatabaseScreen);
+
+                    selectDatabaseController.setNextPanel(tableScreen);
+                    selectUserController.setNextPanel(selectDatabaseScreen);
+
                     app.add(selectUserScreen);
                     app.setVisible(true);
                     app.pack();
+
                 } catch (SQLException e) {
                     JOptionPane.showMessageDialog(app, e.getMessage(), "Database Connection Failure", JOptionPane.ERROR_MESSAGE);
                     e.printStackTrace();

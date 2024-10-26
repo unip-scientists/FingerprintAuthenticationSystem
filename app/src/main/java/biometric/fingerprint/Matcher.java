@@ -33,8 +33,12 @@ public class Matcher {
         ArrayList<File> fingerprint = new ArrayList<>(Arrays.asList(fingerprintsPath.resolve(Integer.toString(id)).toFile().listFiles()));
         Collections.shuffle(fingerprint);
         candidateFile = fingerprint.removeLast();
-        probeFiles = fingerprint;
+        probeFiles = fingerprint; // default
         return candidateFile;
+    }
+
+    public void chooseProbe(int id) {
+        probeFiles = new ArrayList<>(Arrays.asList(fingerprintsPath.resolve(Integer.toString(id)).toFile().listFiles()));
     }
 
     /*
@@ -54,8 +58,8 @@ public class Matcher {
 
         for (FingerprintTemplate t : probe) {
             double similarity = matcher.match(t);
-            System.out.println(similarity);
             if (similarity > threshold) {
+                System.out.println("Score: " + similarity + " threshold: " + threshold);
                 return true;
             }
         }

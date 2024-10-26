@@ -14,7 +14,7 @@ import java.sql.SQLException;
 import biometric.controller.TableController;
 
 public class TableScreen extends JPanel {
-    private JTable table;
+    private JScrollPane scrollPane;
     private TableController controller;
     JPanel panel;
 
@@ -30,14 +30,14 @@ public class TableScreen extends JPanel {
         goBack.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                controller.goToPreviousPanel();
+                controller.goToPreviousPanel(TableScreen.this);
             }
         });
 
         restart.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                controller.goToFirstPanel();
+                controller.goToFirstPanel(TableScreen.this);
             }
         });
 
@@ -48,13 +48,19 @@ public class TableScreen extends JPanel {
     }
 
     public void createJTable(String tableName) throws SQLException {
-        String[] columnNames  = {"Id", "Propriedade", "Regiāo"};
-        table = new JTable(controller.getTableData(tableName), columnNames);
-        JScrollPane scrollPane = new JScrollPane(table);
+        String[] columnNames = { "Id", "Propriedade", "Regiāo" };
+        JTable table = new JTable(controller.getTableData(tableName), columnNames);
 
-        add(scrollPane);
-        add(Box.createRigidArea(new Dimension(0, 5)));
-        add(panel);
-        add(Box.createRigidArea(new Dimension(0, 5)));
+        if (scrollPane == null) {
+            scrollPane = new JScrollPane(table);
+
+            add(scrollPane);
+            add(Box.createRigidArea(new Dimension(0, 5)));
+            add(panel);
+            add(Box.createRigidArea(new Dimension(0, 5)));
+            return;
+        }
+
+        scrollPane.setViewportView(table);
     }
 }

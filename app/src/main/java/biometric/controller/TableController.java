@@ -1,20 +1,46 @@
 package biometric.controller;
 
+import biometric.view.App;
+import biometric.view.SelectUserScreen;
+import biometric.view.SelectDatabaseScreen;
 import biometric.view.Setup;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.ResultSet;
+import javax.swing.JPanel;
 
 public class TableController {
 
-    public void goToFirstPanel() {
+    App frame;
+    SelectDatabaseScreen previousScreen;
+    SelectUserScreen firstScreen;
 
+    public void setPreviousScreen(SelectDatabaseScreen previousScreen) {
+        this.previousScreen = previousScreen;
     }
 
-    public void goToPreviousPanel() {
+    public void setFirstScreen(SelectUserScreen firstScreen) {
+        this.firstScreen = firstScreen;
+    }
 
+    public void goToFirstPanel(JPanel e) {
+        frame.remove(e);
+        frame.add(firstScreen);
+        frame.revalidate();
+        frame.repaint();
+    }
+
+    public void goToPreviousPanel(JPanel e) {
+        frame.remove(e);
+        frame.add(previousScreen);
+        frame.revalidate();
+        frame.repaint();
+    }
+
+    public TableController(App frame) {
+        this.frame = frame;
     }
 
     public Object[][] getTableData(String tableName) throws SQLException {

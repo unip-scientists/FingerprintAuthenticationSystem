@@ -15,9 +15,12 @@ public class SelectUserController {
     SelectDatabaseScreen nextPanel;
     App frame;
 
-    public SelectUserController(App frame, SelectDatabaseScreen nextPanel) {
-        this.nextPanel = nextPanel;
+    public SelectUserController(App frame) {
         this.frame = frame;
+    }
+
+    public void setNextPanel(SelectDatabaseScreen nextPanel) {
+        this.nextPanel = nextPanel;
     }
 
     public ArrayList<Funcionario> retrieveFuncionarios() throws SQLException {
