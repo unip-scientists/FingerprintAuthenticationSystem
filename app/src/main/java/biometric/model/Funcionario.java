@@ -42,6 +42,11 @@ public class Funcionario {
         return id;
     }
 
+    public String getCargoName() {
+        return cargoName;
+    }
+
+
     public String getInfo() {
         return "<html>" + name + "<br/>"
             + "TELEFONE: " + phone + "<br/>"

@@ -4,9 +4,12 @@ import java.awt.event.ActionEvent;
 import javax.swing.JButton;
 
 import biometric.fingerprint.Matcher;
+import biometric.view.App;
 import biometric.view.Setup;
+import biometric.view.TableScreen;
 
 import java.awt.Color;
+import javax.swing.JPanel;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Statement;
@@ -16,22 +19,30 @@ import java.sql.SQLException;
 public class SelectDatabaseController {
     private String currentSelectedDatabase = "";
     public String getCurrentSelectedDatabase() {
-        return currentSelectedDatabase;
+        if (currentSelectedDatabase.equals("")) return "";
+
+        if (currentSelectedDatabase.equals("Rios")) return "Rio";
+        else if (currentSelectedDatabase.equals("Mares")) return "Oceano";
+        return "Lencol";
     }
 
     private Matcher matcher;
+    private TableScreen nextPanel;
+    private App frame;
 
-    public SelectDatabaseController(Matcher matcher) {
+    public SelectDatabaseController(App frame, Matcher matcher, TableScreen nextPanel) {
         this.matcher = matcher;
+        this.frame = frame;
+        this.nextPanel = nextPanel;
     }
 
     public boolean match(int id) throws IOException {
         // build templates, this might be in another thread so it doesn't crash the main thread.
         matcher.buildTemplates();
-        return matcher.compare(0.4);
+        return matcher.compare(40);
     }
 
-    public void clickedDatabaseButton(JButton[] buttons, ActionEvent clickedButtonEvent) {
+    public String clickedDatabaseButton(JButton[] buttons, ActionEvent clickedButtonEvent) {
         JButton selectedButton = (JButton) clickedButtonEvent.getSource();
         currentSelectedDatabase = selectedButton.getText();
 
@@ -43,6 +54,8 @@ public class SelectDatabaseController {
                 b.setBackground(null);
             }
         }
+
+        return currentSelectedDatabase;
     }
 
     public File getCandidate(int id) {
@@ -56,5 +69,14 @@ public class SelectDatabaseController {
         res.next();
 
         return matcher.chooseCandidate(res.getInt("Id"));
+    }
+
+    public void goToNextPanel(JPanel e, String tableName) throws SQLException {
+        nextPanel.createJTable(tableName);
+        frame.remove(e);
+        frame.add(nextPanel);
+        frame.revalidate();
+        frame.repaint();
+
     }
 }

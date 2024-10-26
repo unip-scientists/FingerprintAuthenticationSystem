@@ -21,6 +21,7 @@ import java.awt.Dimension;
 
 import biometric.controller.SelectUserController;
 import biometric.model.Funcionario;
+import javax.swing.JOptionPane;
 
 public class SelectUserScreen extends JPanel {
 
@@ -79,6 +80,7 @@ public class SelectUserScreen extends JPanel {
 
         } catch (SQLException e) {
             /* FATAL: without employees the program can't function */
+            JOptionPane.showMessageDialog(this, "Could not fetch employees.", "Query Error", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
     }

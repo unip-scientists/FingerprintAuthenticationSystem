@@ -28,7 +28,6 @@ public class Setup {
         String basePath = new File("").getAbsolutePath();
         tablesPath = Path.of(basePath, "/src/main/java/biometric/data");
         fingerprintsPath = Path.of(basePath, "/src/main/java/biometric/data/fingerprint");
-        System.out.println(fingerprintsPath);
 
         try {
             Rio();

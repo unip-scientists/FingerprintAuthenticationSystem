@@ -5,6 +5,7 @@ import javax.swing.JLabel;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import java.awt.Dimension;
 import javax.swing.Box;
 import javax.imageio.ImageIO;
@@ -31,10 +32,12 @@ public class SelectDatabaseScreen extends JPanel {
     private JLabel funcionarioInfo;
     private JLabel fingerprintImage;
     private JLabel statusLabel;
+    private String db;
 
     public void setFuncionario(Funcionario funcionario) {
         this.funcionario = funcionario;
         BufferedImage img;
+
         try {
             img = ImageIO.read(funcionario.getAvatarURL());
             avatarImage.setIcon(
@@ -86,7 +89,8 @@ public class SelectDatabaseScreen extends JPanel {
             b.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    controller.clickedDatabaseButton(buttons, e);
+                    String db = controller.clickedDatabaseButton(buttons, e);
+                    SelectDatabaseScreen.this.db = db;
                 }
             });
         }
@@ -130,36 +134,48 @@ public class SelectDatabaseScreen extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                /* this button has 2 roles, although not considered a good aproach:
+                /*
+                 * this button has 2 roles, although not considered a good aproach:
                  * 1. It choose the identity and type of the fingerprint
-                 * 2. It sets up and matches the chosen candidate with the probe on the other end
-                 */ 
+                 * 2. It sets up and matches the chosen candidate with the probe on the other
+                 * end
+                 */
 
+                String c = funcionario.getCargoName();
+
+                if (db.equals("Lencol") && !c.equals("Ministro")
+                    || db.equals("Mares") && c.equals("Funcionario")) {
+
+                    // NONFATAL
+                    JOptionPane.showMessageDialog(SelectDatabaseScreen.this, "You do not have access to this source.", "Forbidden", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
                 if (scannerButton.getText().equals("Confirmar Identidade")) {
                     try {
                         boolean isSimilar = controller.match(funcionario.getId());
 
                         if (isSimilar) {
-                            // go to third panel to show database
-                            System.out.println("You are authenticated!");
+                            controller.goToNextPanel(SelectDatabaseScreen.this,controller.getCurrentSelectedDatabase());
                         } else {
-                            // show not authorized message
-                            System.out.println("You are an IMPOSTOR!");
+                            JOptionPane.showMessageDialog(SelectDatabaseScreen.this, "Your identity is not confirmed.", "Not Authorized", JOptionPane.ERROR_MESSAGE);
                         }
                     } catch (IOException e1) {
+                        JOptionPane.showMessageDialog(SelectDatabaseScreen.this, "Fingerprint confirmation FAILED", "Fingerprint Error", JOptionPane.ERROR_MESSAGE);
                         System.out.println("FATAL: can't compare fingerprints | can't confirm identity");
                         e1.printStackTrace();
+                    } catch (SQLException e2) {
+                        // FATAL: without being able to access database, the authentication must fail
+                        JOptionPane.showMessageDialog(SelectDatabaseScreen.this, "Database source could not be fetched.", "Querry Error", JOptionPane.ERROR_MESSAGE);
+                        System.out.println("the database couldn't fetch resource or is unavailable | can't access database");
                     }
                     return;
                 }
 
                 if (controller.getCurrentSelectedDatabase().isEmpty()) {
                     // ERROR NONFATAL: the user must select one of the three databases
-                    System.out.println("MUST SELECT DATABASE");
+                    JOptionPane.showMessageDialog(SelectDatabaseScreen.this, "You have to select one of the databases.", "Options", JOptionPane.INFORMATION_MESSAGE);
                     return;
                 }
-
-                // check if database selected applies to job role
 
                 if (((String) dropdownList.getSelectedItem()).equals("Digital autorizada")) {
                     try {
@@ -171,7 +187,9 @@ public class SelectDatabaseScreen extends JPanel {
                                         Image.SCALE_SMOOTH)));
                     } catch (IOException e1) {
                         // FATAL: there is no matching if the candidate is missing.
+                        JOptionPane.showMessageDialog(SelectDatabaseScreen.this, "Fingerprint candidate can't be scanned.", "Scanner Error", JOptionPane.ERROR_MESSAGE);
                         e1.printStackTrace();
+                        return;
                     }
 
                 } else if (((String) dropdownList.getSelectedItem()).equals("Digital NÃO autorizada")) {
@@ -185,13 +203,14 @@ public class SelectDatabaseScreen extends JPanel {
                     } catch (IOException | SQLException e1) {
                         // FATAL: IO - problem with reading image, can't continue the program
                         // FATAL: SQL - can't access the database can't create fingerprint template
+                        JOptionPane.showMessageDialog(SelectDatabaseScreen.this, "Fingerprint Authentication Error", "Scanner Error", JOptionPane.ERROR_MESSAGE);
                         System.out.println("FATAL ERROR IO/SQL");
                         e1.printStackTrace();
                     }
 
                 } else {
                     // NONFATAL: error, can't choose this option.
-                    System.out.println("ERROR essa opcao nao existe");
+                    JOptionPane.showMessageDialog(SelectDatabaseScreen.this, "The option selected is invalid.", "Options", JOptionPane.INFORMATION_MESSAGE);
                     return;
                 }
 

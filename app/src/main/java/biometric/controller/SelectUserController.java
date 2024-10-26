@@ -5,7 +5,6 @@ import biometric.view.App;
 import biometric.view.SelectDatabaseScreen;
 import biometric.view.Setup;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.ResultSet;
