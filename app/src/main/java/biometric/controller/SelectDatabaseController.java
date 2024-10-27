@@ -66,14 +66,23 @@ public class SelectDatabaseController {
     }
 
     public File forbadeMatcher(int id) throws SQLException {
-        // candidate != id + default probe
-        Statement stat = Setup.getConnection().createStatement();
-        ResultSet res = stat.executeQuery("SELECT Id FROM Funcionario WHERE Id != " + id + " ORDER BY RAND() LIMIT 1");
-        res.next();
-
-        File candidate = matcher.chooseCandidate(res.getInt("Id"));
-        matcher.chooseProbe(id);
-        return candidate;
+        String query = "SELECT Id FROM Funcionario WHERE Id != ? ORDER BY RAND() LIMIT 1";
+    
+        try (PreparedStatement stmt = Setup.getConnection().prepareStatement(query)) {
+            stmt.setInt(1, id); // Define o valor para o parâmetro
+    
+            ResultSet res = stmt.executeQuery();
+            if (res.next()) {
+                int candidateId = res.getInt("Id");
+    
+                File candidate = matcher.chooseCandidate(candidateId);
+                matcher.chooseProbe(id);
+    
+                return candidate;
+            } else {
+                throw new SQLException("Nenhum candidato encontrado.");
+            }
+        }
     }
 
     public void goToNextPanel(JPanel e, String tableName) throws SQLException {
